@@ -13,7 +13,7 @@ class Location:
         return cls([x, y])
     
     def copy (self):
-        return cls(list(self.__coords))
+        return Location(list(self.__coords))
 
     # Getters
     def get_coords (self): return self.__coords

@@ -14,4 +14,4 @@ class Food (Resource):
         return sum(self._location.get_coords()) + self._effects["restoration"]
 
     def __eq__ (self, other):
-        return self._location == other.get_location().get_coords() and self._effects["restoration"] == other.get_effects()["restoration"]
+        return self._location.get_coords() == other.get_location().get_coords() and self._effects["restoration"] == other.get_effects()["restoration"]

@@ -14,6 +14,7 @@ class ElementType (Enum):
     SHELTER = 3
     OBSTACLE = 4
     DEAD = 5
+    NEW = 6
 
 def get_movement_modifiers ():
     return [[0, 1], [1, 0], [0, -1], [-1, 0]]
@@ -28,7 +29,8 @@ def list_addition (list_1, list_2):
 
 # default, path, board_adv, creature_adv, creature_move, creature_path, creature_nearest, creature_goal_valid
 #allowed_tags = ["default", "board_adv", "creature_move", "creature_path", "creature_adv", "path", "creature_nearest", "creature_goal_valid"]
-allowed_tags = ["creature_path", "creature_move", "creature_adv", "creature_goal_change"]
+#allowed_tags = ["creature_path", "creature_move", "creature_adv", "creature_goal_change"]
+allowed_tags = []
 
 # Debug print
 def print_d (string, tag="default"):
