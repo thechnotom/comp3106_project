@@ -1,6 +1,6 @@
 {
     "files": {
-        "layout" : "initial_conditions/walled_shelters.csv"
+        "layout" : "initial_conditions/costly_shelters.csv"
     },
     "control" : {
         "max_steps" : 1000,
