@@ -1,4 +1,6 @@
 from enum import Enum
+import csv
+import json
 
 class Goal (Enum):
     FOOD = 1
@@ -27,7 +29,7 @@ def list_addition (list_1, list_2):
         result.append(list_1[i] + list_2[i])
     return result
 
-# default, path, board_adv, creature_adv, creature_move, creature_path, creature_nearest, creature_goal_valid
+# default, path, board_adv, creature_adv, creature_move, creature_path, creature_nearest, creature_goal_valid, board_generation, board_csv
 #allowed_tags = ["default", "board_adv", "creature_move", "creature_path", "creature_adv", "path", "creature_nearest", "creature_goal_valid"]
 #allowed_tags = ["creature_path", "creature_move", "creature_adv", "creature_goal_change"]
 allowed_tags = []
@@ -38,13 +40,13 @@ def print_d (string, tag="default"):
         print(f"DEBUG: {string}")
 
 # get the elements at a specific location
-def element_at_location (loc_dict, loc):
+def elements_at_location (loc_dict, loc):
     try:
         return loc_dict[loc]
     except KeyError:
         return None
 
-# dictionary with location as key and element as valie
+# dictionary with location as key and element as value
 def get_location_dictionary (elements):
     result = {}
     for element in elements:
@@ -55,14 +57,32 @@ def get_location_dictionary (elements):
             result[loc] = [element]
     return result
 
-# combine element_at_location and get_location_dictionary
+# combine elements_at_location and get_location_dictionary
 def elements_at (elements, loc):
-    return element_at_location(get_location_dictionary(elements), loc)
+    return elements_at_location(get_location_dictionary(elements), loc)
 
+def import_csv (filename):
+    result = []
+    with open(filename, "r") as f:
+        reader = csv.reader(f, delimiter=",")
+        for line in reader:
+            result.append(line)
+    return result
+
+def import_json (filename):
+    raw_data = None
+    with open(filename, "r") as f:
+        raw_data = f.read()
+    return json.loads(raw_data)
+
+# basic (and slightly modified) implementation of a stack
 class Stack:
 
     def __init__ (self):
         self.__values = []
+
+    def get_list (self):
+        return self.__values
 
     def push (self, value):
         self.__values.append(value)

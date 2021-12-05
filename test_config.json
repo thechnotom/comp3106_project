@@ -1,0 +1,49 @@
+{
+    "config" : {
+        "csv_labels" : {
+            "empty" : "-",
+            "shelter" : "s",
+            "food" : "f",
+            "obstacle" : {
+                "passable" : "o",
+                "impassable" : "O"
+            }
+        },
+        "random" : {
+            "food" : {
+                "restoration" : {
+                    "min" : 10,
+                    "max" : 25
+                },
+                "tries" : 5,
+                "chance" : 1
+            },
+            "shelter" : {
+                "restoration" : {
+                    "min" : 1,
+                    "max" : 3
+                }
+            },
+            "obstacle" : {
+                "cost" : {
+                    "min" : 2,
+                    "max" : 5
+                }
+            }
+        }
+    },
+    "species" : {
+        "1" : {
+            "health" : 150,
+            "speed" : 2,
+            "vulnerability" : 2,
+            "sight" : 15
+        },
+        "2" : {
+            "health" : 150,
+            "speed" : 2,
+            "vulnerability" : 4,
+            "sight" : 15
+        }
+    }
+}

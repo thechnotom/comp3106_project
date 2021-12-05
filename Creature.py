@@ -74,7 +74,8 @@ class Creature (Element):
         if (self.get_element_type(self.__curr_element) == ElementType.SHELTER):
             if (self.__steps_waiting > self.__thresholds["restlessness"]):
                 self.__barred_shelter = self.__curr_element
-                self.add_goal(Goal.SHELTER)
+                if (self.__goal.peek() != Goal.SHELTER):
+                    self.add_goal(Goal.SHELTER)
             else:
                 if (self.health() >= self.__thresholds["shelter_healing"]):
                     self.__steps_waiting += 1
@@ -279,9 +280,23 @@ class Creature (Element):
                 self.set_location(next_loc)
             else:
                 self.goal = None
+
         if (self.__goal.peek() == Goal.WANDER or self.__goal.peek() == Goal.HEAL):
-            self.set_location(Location(list_addition(self._location.get_coords(), choice(get_movement_modifiers()))))
+            next_loc = Location(list_addition(self._location.get_coords(), choice(get_movement_modifiers())))
+            # we only need to check validity for wander/heal since Path takes care of it otherwise
+            if (self.valid_move_location(next_loc)):
+                self.set_location(next_loc)
+
         self.__curr_element = self.current_location_element()
+
+    def valid_move_location (self, loc):
+        elements = elements_at(self.__elements[ElementType.OBSTACLE], loc)
+        if (elements is None):
+            return True
+        for element in elements:
+            if (not element.is_passable()):
+                return False
+        return True
 
     # class_name: identifier of a class (ex. Food, Shelter)
     def __get_nearest (self, elements, barring=set()):
@@ -326,29 +341,17 @@ class Creature (Element):
         if (self.__path is not None):
             self.__path_needed = False
 
-        """
-        # reset the path if there is no goal
-        if (self.__goal is None):
-            self.__path = None
-        # if the creature is moving toward food but it has been taken
-        if (self.__goal is Goal.FOOD and self.__path is not None and self.food_exists(self.__path.get_goal())):
-            self.__path = None
-        print_d("moving", "creature_adv")
-        self.move()
-        print_d("calculating health", "creature_adv")
-        self.__health = max(self.__health - self.__vulnerability, 0)
-        print_d("deciding food action", "creature_adv")
-        self.food_decision()
-        print_d("determining goal", "creature_adv")
-        self.determine_goal()
-        print_d(f"determining if new path is necessary with path={self.__path}", "creature_adv")
-        if (self.__path is None):
-            print_d("getting path", "creature_adv")
-            self.__path = self.get_path()  # replaced with prepare_goal
-        """
-
     def health_string (self):
         return f"{self.__health}/{self.__health_max} ({int(round(self.health() * 100, 0))}%)"
+
+    def goal_string (self):
+        result = ""
+        temp_goals = self.__goal.get_list()
+        for i in range(0, len(temp_goals)):
+            result += f"{temp_goals[i].name}"
+            if (i < len(temp_goals) - 1):
+                result += "->"
+        return result
 
     def __hash__ (self):
         return self._id + hash(self.__species)

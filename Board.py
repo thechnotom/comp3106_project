@@ -1,15 +1,19 @@
 # Storage and management of elements being simulated
 
-from utilities import print_d, elements_at, ElementType, element_dict_to_set
+from utilities import print_d, elements_at, ElementType, element_dict_to_set, get_location_dictionary
+from utilities import elements_at_location, import_csv, import_json
 from Generator import Generator
 from Creature import Creature
 from Location import Location
 from Food import Food
 from Shelter import Shelter
+from Species import Species
+import random
 
 class Board:
 
-    def __init__ (self):
+    def __init__ (self, top_left, bottom_right):
+        self.__config = import_json("test_config.json")
         self.__elements = {
             ElementType.CREATURE : set(),
             ElementType.FOOD : set(),
@@ -22,9 +26,61 @@ class Board:
         self.__step = 0
         self.__population_record = {}
         self.__species_update_steps = {}  # tracks the last step a species count was modified
+        self.__limits = [top_left, bottom_right]  # Location instances specifying the corners of the area
     
+    @classmethod
+    def from_csv (cls, filename):
+        raw_data = import_csv(filename)
+        board = cls(
+            Location([0, 0]),
+            Location([len(raw_data), len(raw_data[0])])
+        )
+        for row in range(0, len(raw_data)):
+            for col in range(0, len(raw_data[row])):
+                curr_label = raw_data[row][col]
+                if (curr_label == board.__config["config"]["csv_labels"]["empty"]):
+                    continue
+                curr_loc = Location([row, col])
+                if (curr_label == board.__config["config"]["csv_labels"]["shelter"]):
+                    board.create_shelter(curr_loc, random.randint(
+                        board.__config["config"]["random"]["shelter"]["restoration"]["min"],
+                        board.__config["config"]["random"]["shelter"]["restoration"]["max"]
+                    ))
+                elif (curr_label == board.__config["config"]["csv_labels"]["food"]):
+                    board.generate_food(
+                        board.__config["config"]["random"]["food"]["tries"],
+                        board.__config["config"]["random"]["food"]["chance"],
+                        board.__config["config"]["random"]["food"]["restoration"]["min"],
+                        board.__config["config"]["random"]["food"]["restoration"]["max"],
+                        curr_loc
+                    )
+                elif (curr_label == board.__config["config"]["csv_labels"]["obstacle"]["passable"]):
+                    board.create_obstacle(
+                        curr_loc,
+                        random.randint(
+                            board.__config["config"]["random"]["obstacle"]["cost"]["min"],
+                            board.__config["config"]["random"]["obstacle"]["cost"]["max"]
+                        )
+                    )
+                elif (curr_label == board.__config["config"]["csv_labels"]["obstacle"]["impassable"]):
+                    board.create_obstacle(curr_loc, float("inf"))
+                else:
+                    if (curr_label in board.__config["species"]):
+                        board.create_creature(curr_loc, board.build_species(curr_label))
+                    else:
+                        print_d(f"Unable to find species: {curr_label}", "board_csv")
+        return board
+
     def get_step (self): return self.__step
     def get_population_record (self): return self.__population_record
+
+    def get_all_elements (self):
+        return set.union(
+            self.__elements[ElementType.CREATURE],
+            self.__elements[ElementType.FOOD],
+            self.__elements[ElementType.SHELTER],
+            self.__elements[ElementType.OBSTACLE]
+        )
 
     def adjust_species_count (self, species, operation):
         if (species not in self.__species_update_steps):
@@ -61,6 +117,45 @@ class Board:
     def create_shelter (self, init_loc, restoration):
         self.__elements[ElementType.SHELTER].add(self.__generator.shelter(init_loc, restoration))
 
+    def create_obstacle (self, init_loc, cost):
+        self.__elements[ElementType.OBSTACLE].add(self.__generator.obstacle(init_loc, cost))
+
+    def build_species (self, name):
+        return Species(
+            name,
+            health=self.__config["species"][name]["health"],
+            speed=self.__config["species"][name]["speed"],
+            vulnerability=self.__config["species"][name]["vulnerability"],
+            sight=self.__config["species"][name]["sight"]
+        )
+
+    def get_empty_location (self, attempts=10):
+        # don't want to use elements_at since that would have to be repeated every loop
+        location_dict = get_location_dictionary(self.get_all_elements())
+        for i in range(0, attempts):
+            location = Location([
+                random.randint(
+                    self.__limits[0].get_coords()[0],
+                    self.__limits[1].get_coords()[0]
+                ),
+                random.randint(
+                    self.__limits[0].get_coords()[1],
+                    self.__limits[1].get_coords()[1]
+                )
+            ])
+            if (elements_at_location(location_dict, location) is None):
+                return location
+        print_d(f"Could not find valid location after {attempts} attempts", "board_generation")
+        return None
+
+    def generate_food (self, tries, chance, min_rest, max_rest, location=None):
+        for i in range(0, tries):
+            if (random.random() <= chance):
+                if (location is None):
+                    location = self.get_empty_location()
+                if (location is not None):
+                    self.create_food(location, random.randint(min_rest, max_rest))
+
     def remove_dead (self):
         for element in self.__elements[ElementType.DEAD]:
             if (isinstance(element, Creature)):
@@ -82,6 +177,7 @@ class Board:
             creature.advance()
         self.remove_dead()
         self.add_new()
+        self.generate_food(3, 0.1, 10, 25)
         print_d("Completed creature advancements", "board_adv")
         self.__step += 1
 
@@ -105,7 +201,7 @@ class Board:
         result = "--- Status ---\n"
         for creature in self.__elements[ElementType.CREATURE]:
             result += f"Creature ({creature.get_quick_label()}): {creature.health_string()}, Restlessness: {creature.get_restlessness()}, "
-            result += f"Food: {creature.get_food_amount()}, Goal: {creature.get_goal()}\n"
+            result += f"Food: {creature.get_food_amount()}, Goal: {creature.goal_string()}\n"
         return result
 
     def population_record_string (self):

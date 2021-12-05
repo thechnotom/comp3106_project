@@ -12,7 +12,8 @@ class Generator:
         self.__count = {
             ElementType.CREATURE : {},
             ElementType.FOOD : 0,
-            ElementType.SHELTER : 0
+            ElementType.SHELTER : 0,
+            ElementType.OBSTACLE : 0
         }
 
     def creature (self, elements, init_loc, species):
@@ -28,3 +29,7 @@ class Generator:
     def shelter (self, init_loc, restoration):
         self.__count[ElementType.SHELTER] += 1
         return Shelter(self.__count[ElementType.SHELTER], init_loc, restoration)
+
+    def obstacle (self, init_loc, cost):
+        self.__count[ElementType.OBSTACLE] += 1
+        return Obstacle(self.__count[ElementType.OBSTACLE], init_loc, cost)

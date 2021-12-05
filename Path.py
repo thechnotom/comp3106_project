@@ -1,7 +1,7 @@
 # Represents a path
 # Pathfinding elements of this class are heavily inspired by assignment 1
 
-from utilities import print_d, element_at_location, get_location_dictionary, get_movement_modifiers
+from utilities import print_d, get_location_dictionary, get_movement_modifiers
 from Obstacle import Obstacle
 from Location import Location
 import math
