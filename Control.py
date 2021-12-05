@@ -1,11 +1,13 @@
 # Main control class
 
-from utilities import print_d
+from utilities import print_d, import_json
 from Board import Board
 from Generator import Generator
 from Species import Species
 from Location import Location
 import time
+from Graph import Graph
+import sys
 
 class Control:
 
@@ -13,53 +15,50 @@ class Control:
         print_d("Control does not need to be instantiated")
 
     @staticmethod
-    def start (max_steps=100):
-        board = Board.from_csv("initial_conditions/start_1.csv")
-
-        for i in range(0, max_steps):
-            if (board.get_step() % 10 == 0):
-                print(f"Step: {board.get_step()}")
-            board.advance()
-            #print(board.get_board_string([0, 0], [30, 30]))
-            #print(board.creature_status_string())
-            #input("Press ENTER")
-            #time.sleep(0.2)
-
-        print(board.population_record_string())
-
-    """
-    @staticmethod
     def start ():
-        board = Board(top_left=Location([-15, -15]), bottom_right=Location([15, 15]))
-        species_1 = Species("tester", health=100, speed=1, vulnerability=2, sight=10)
-        species_2 = Species("cool", health=150, speed=2, vulnerability=4, sight=15)
+        config_filename = "config.json"
+        if (len(sys.argv) == 2):
+            config_filename = sys.argv[1]
+        config = import_json("config.json")
+        board = Board.from_csv(config["files"]["layout"], config_filename)
+        options = config["control"]
+        max_steps = options["max_steps"]
 
-        board.create_creature([1, 2], species_1)
-        board.create_creature([5, 3], species_1)
-        board.create_creature([-1, -2], species_2)
+        start_time = time.time()
+        try:
+            for i in range(0, max_steps):
+                if (options["show_every_X_steps"] > 0 and board.get_step() % options["show_every_X_steps"] == 0):
+                    print(f"Step: {board.get_step()}/{max_steps}")
+                board.advance()
+                if (options["show_every_X_boards"] > 0 and board.get_step() % options["show_every_X_boards"] == 0):
+                    print(board.get_board_string(board.get_origin_coords(), board.get_board_dimensions()))
+                    print(board.creature_status_string())
+                    if (options["wait_for_user"]):
+                        input("Press ENTER")
+                    if (options["delay"] > 0):
+                        time.sleep(options["delay"])
+        except KeyboardInterrupt:
+            print("Caught Ctrl+C")
+        end_time = time.time()
+        print(f"Simulation time: {round(end_time - start_time, 2)} seconds")
+        print(f"Completed {board.get_step()}/{max_steps} steps")
 
-        board.create_food([3, 4], 10)
-        board.create_food([7, 5], 15)
-        board.create_food([-7, -7], 12)
-        board.create_food([3, 7], 15)
-        board.create_food([-2, 9], 11)
-        board.create_food([9, 9], 9)
-        board.create_food([-2, -9], 11)
-        board.create_food([9, -9], 9)
+        if (options["show_graphs"]):
+            print("Creating graphs")
+            population_record = board.get_population_record()
+            food_record = board.get_food_record()
+            graph = Graph()
+            graph.create_species_graph(Graph.convert_population_record(population_record))
+            graph.create_food_graph(Graph.convert_food_record(food_record))
+            try:
+                Graph.show_graphs()
+            except KeyboardInterrupt:
+                print("Caught Ctrl+C")
 
-        board.create_shelter([0, 0], 2)
-        #board.create_shelter([-8, -8], 2)
-
-        #print(board.get_board_string([0, 0], [10, 10]))
-        for i in range(0, 1000):
-            print(f"Step: {board.get_step()}")
-            board.advance()
-            print(board.get_board_string([-15, -15], [30, 30]))
-            print(board.creature_status_string())
-            #input("Press ENTER")
-            time.sleep(0.5)
-
-        print(board.population_record_string())
-    """
-
-Control.start(1000)
+    @staticmethod
+    def print_information ():
+        print("=========================")
+        print("Thomas Roller (101072857)")
+        print("COMP 3106 A (Fall 2021)")
+        print("Final Project")
+        print("=========================")

@@ -13,7 +13,7 @@ class Obstacle (Element):
     def is_passable (self): return self.__passable
 
     def __hash__ (self):
-        return sum(self._location.get_coords()) + self.__cost
+        return sum(self._location.get_coords())
 
     def __eq__ (self, other):
-        return self._location.get_coords() == other.get_coords() and self.__passable == other.is_passable()
+        return self._location.get_coords() == other.get_location().get_coords() and self.__passable == other.is_passable()

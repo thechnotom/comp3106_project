@@ -48,6 +48,8 @@ class Path:
 
     def is_finished (self): return self.__pos == len(self.__path) - 1
 
+    def path_exists (self): return self.__path is not None
+
     def get_obstacle_dict (self, elements):
         return get_location_dictionary([x for x in elements if isinstance(x, Obstacle)])
 
@@ -66,7 +68,7 @@ class Path:
                 continue
             # add the element only if it is passable or if it is not an obstacle
             if (temp_loc in self.__obstables_dict):
-                temp_element = self.__obstables_dict[temp_loc]
+                temp_element = self.__obstables_dict[temp_loc][0]
                 if (temp_element.is_passable()):
                     nodes.append(Path.Node(temp_loc, node, self.__goal, temp_element.get_cost()))
             else:
@@ -98,7 +100,10 @@ class Path:
 
     # adapted from A1
     def get_results (self):
-        curr_node, explored_list = self.generate_path()  # curr_node starts as the final node in the path
+        result = self.generate_path()  # curr_node starts as the final node in the path
+        if (result is None):
+            return None
+        curr_node, explored_list = result
         print_d(f"final node: {curr_node}", "path")
         #print_d("explored nodes\n" + self.grid_string(explored_list, -15, -15, 30, 30), "path")
         #print_d("explored nodes\n" + self.grid_string(explored_list, -20, -20, 50, 50), "path")

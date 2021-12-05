@@ -1,7 +1,10 @@
+# Utility functions that can be used in multiple classes
+
 from enum import Enum
 import csv
 import json
 
+# goals that a creature can have
 class Goal (Enum):
     FOOD = 1
     SHELTER = 2
@@ -10,6 +13,7 @@ class Goal (Enum):
     HEAL = 5
     WANDER = 6
 
+# the types of elements
 class ElementType (Enum):
     CREATURE = 1
     FOOD = 2
@@ -18,9 +22,11 @@ class ElementType (Enum):
     DEAD = 5
     NEW = 6
 
+# the directions that a creature can move
 def get_movement_modifiers ():
     return [[0, 1], [1, 0], [0, -1], [-1, 0]]
 
+# add two lists element-wise
 def list_addition (list_1, list_2):
     if (len(list_1) != len(list_2)):
         raise Exception("Lists must be of equal length for list addition")
@@ -29,17 +35,17 @@ def list_addition (list_1, list_2):
         result.append(list_1[i] + list_2[i])
     return result
 
-# default, path, board_adv, creature_adv, creature_move, creature_path, creature_nearest, creature_goal_valid, board_generation, board_csv
-#allowed_tags = ["default", "board_adv", "creature_move", "creature_path", "creature_adv", "path", "creature_nearest", "creature_goal_valid"]
-#allowed_tags = ["creature_path", "creature_move", "creature_adv", "creature_goal_change"]
-allowed_tags = []
-
 # Debug print
 def print_d (string, tag="default"):
+    # which print_d calls should be displayed
+    # default, path, board_adv, creature_adv, creature_move, creature_path, creature_nearest, creature_goal_valid, board_generation, board_csv
+    allowed_tags = []
     if (tag in allowed_tags):
         print(f"DEBUG: {string}")
 
 # get the elements at a specific location
+# loc_dict: dictionary of locations and elements (likely from get_location_dictionary)
+# loc: location being checked
 def elements_at_location (loc_dict, loc):
     try:
         return loc_dict[loc]
@@ -47,6 +53,7 @@ def elements_at_location (loc_dict, loc):
         return None
 
 # dictionary with location as key and element as value
+# elements: iterable of elements
 def get_location_dictionary (elements):
     result = {}
     for element in elements:
@@ -58,9 +65,13 @@ def get_location_dictionary (elements):
     return result
 
 # combine elements_at_location and get_location_dictionary
+# elements: iterable of elements
+# loc: location being checked
 def elements_at (elements, loc):
     return elements_at_location(get_location_dictionary(elements), loc)
 
+# import a CSV file
+# filename: name of CSV file
 def import_csv (filename):
     result = []
     with open(filename, "r") as f:
@@ -69,6 +80,8 @@ def import_csv (filename):
             result.append(line)
     return result
 
+# import a JSON file
+# filename: name of JSON file
 def import_json (filename):
     raw_data = None
     with open(filename, "r") as f:
@@ -111,6 +124,8 @@ class Stack:
     def __str__ (self):
         return str(self.__values)
 
+# takes a dictionary of sets containing elements and returns a single set of elements
+# elements: dictionary of sets of elements (likely Board.__elements)
 def element_dict_to_set (elements):
     result = set()
     for key in elements:

@@ -12,8 +12,12 @@ import random
 
 class Board:
 
-    def __init__ (self, top_left, bottom_right):
-        self.__config = import_json("test_config.json")
+    # constructor
+    # top_left: Location instance at the top-left of the area where food should generate
+    # bottom_right: Location instance at the bottom-right of the area where food should generate
+    # config_filename: name of the configuration JSON file
+    def __init__ (self, top_left, bottom_right, config_filename):
+        self.__config = import_json(config_filename)
         self.__elements = {
             ElementType.CREATURE : set(),
             ElementType.FOOD : set(),
@@ -25,15 +29,20 @@ class Board:
         self.__generator = Generator()
         self.__step = 0
         self.__population_record = {}
+        self.__food_record = {}
         self.__species_update_steps = {}  # tracks the last step a species count was modified
         self.__limits = [top_left, bottom_right]  # Location instances specifying the corners of the area
     
+    # create the board from a CSV layout
+    # layout_filename: name of the CSV file containing the layout
+    # config_filename: name of the configuration JSON file
     @classmethod
-    def from_csv (cls, filename):
-        raw_data = import_csv(filename)
+    def from_csv (cls, layout_filename, config_filename):
+        raw_data = import_csv(layout_filename)
         board = cls(
             Location([0, 0]),
-            Location([len(raw_data), len(raw_data[0])])
+            Location([len(raw_data), len(raw_data[0])]),
+            config_filename
         )
         for row in range(0, len(raw_data)):
             for col in range(0, len(raw_data[row])):
@@ -48,7 +57,7 @@ class Board:
                     ))
                 elif (curr_label == board.__config["config"]["csv_labels"]["food"]):
                     board.generate_food(
-                        board.__config["config"]["random"]["food"]["tries"],
+                        board.__config["config"]["limits"]["food"]["tries"],
                         board.__config["config"]["random"]["food"]["chance"],
                         board.__config["config"]["random"]["food"]["restoration"]["min"],
                         board.__config["config"]["random"]["food"]["restoration"]["max"],
@@ -71,8 +80,20 @@ class Board:
                         print_d(f"Unable to find species: {curr_label}", "board_csv")
         return board
 
+    # getters
     def get_step (self): return self.__step
     def get_population_record (self): return self.__population_record
+    def get_limits (self): return self.__limits
+    def get_food_record (self): return self.__food_record
+
+    def get_origin_coords (self):
+        return self.__limits[0].get_coords()
+
+    def get_board_dimensions (self):
+        return [
+            self.__limits[1].get_coords()[0] - self.__limits[0].get_coords()[0],
+            self.__limits[1].get_coords()[1] - self.__limits[0].get_coords()[1]
+        ]
 
     def get_all_elements (self):
         return set.union(
@@ -82,6 +103,9 @@ class Board:
             self.__elements[ElementType.OBSTACLE]
         )
 
+    # update the count for a species
+    # species: name of species being updated
+    # operation: add or subtract function taking two arguments
     def adjust_species_count (self, species, operation):
         if (species not in self.__species_update_steps):
             self.__species_update_steps[species] = 0
@@ -97,26 +121,41 @@ class Board:
         )
         self.__species_update_steps[species] = self.__step
 
+    # increase the count for a species
+    # species: name of the species being updated
     def increase_species_count (self, species):
         def add (val_1, val_2):
             return val_1 + val_2
         self.adjust_species_count(species, add)
     
+    # decrease the count for a species
+    # species: name of the species being updated
     def decrease_species_count (self, species):
         def sub (val_1, val_2):
             return val_1 - val_2
         self.adjust_species_count(species, sub)
 
+    # create a creature
+    # init_loc: initial location of the creature
+    # species: Species instance representing the creature's species
     def create_creature (self, init_loc, species):
         self.__elements[ElementType.CREATURE].add(self.__generator.creature(self.__elements, init_loc, species))
         self.increase_species_count(species.get_name())
 
+    # create food
+    # init_loc: initial location of the food
+    # restoration: the amount of health the food recovers upon consumption
     def create_food (self, init_loc, restoration):
         self.__elements[ElementType.FOOD].add(self.__generator.food(init_loc, restoration))
 
+    # create shelter
+    # init_loc: location of the shelter
+    # restoration: the amount of health the shelter recovers for any creatures at its location every step
     def create_shelter (self, init_loc, restoration):
         self.__elements[ElementType.SHELTER].add(self.__generator.shelter(init_loc, restoration))
 
+    # create an obstacle
+    #
     def create_obstacle (self, init_loc, cost):
         self.__elements[ElementType.OBSTACLE].add(self.__generator.obstacle(init_loc, cost))
 
@@ -126,7 +165,8 @@ class Board:
             health=self.__config["species"][name]["health"],
             speed=self.__config["species"][name]["speed"],
             vulnerability=self.__config["species"][name]["vulnerability"],
-            sight=self.__config["species"][name]["sight"]
+            sight=self.__config["species"][name]["sight"],
+            resourcefulness=self.__config["species"][name]["resourcefulness"]
         )
 
     def get_empty_location (self, attempts=10):
@@ -149,7 +189,10 @@ class Board:
         return None
 
     def generate_food (self, tries, chance, min_rest, max_rest, location=None):
+        limit = self.__config["config"]["limits"]["food"]["amount"]
         for i in range(0, tries):
+            if (limit >= 0 and len(self.__elements[ElementType.FOOD]) >= limit):
+                return
             if (random.random() <= chance):
                 if (location is None):
                     location = self.get_empty_location()
@@ -177,8 +220,14 @@ class Board:
             creature.advance()
         self.remove_dead()
         self.add_new()
-        self.generate_food(3, 0.1, 10, 25)
+        self.generate_food(
+            self.__config["config"]["limits"]["food"]["tries"],
+            self.__config["config"]["random"]["food"]["chance"],
+            self.__config["config"]["random"]["food"]["restoration"]["min"],
+            self.__config["config"]["random"]["food"]["restoration"]["max"]
+        )
         print_d("Completed creature advancements", "board_adv")
+        self.__food_record[self.__step] = len(self.__elements[ElementType.FOOD])
         self.__step += 1
 
     def primary_element_at (self, elements, loc):

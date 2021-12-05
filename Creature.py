@@ -11,6 +11,12 @@ from random import choice
 
 class Creature (Element):
 
+    # constructor
+    # elements: dictionary of all elements (probably from Board)
+    # identifier: value combined with the species name to form a unique identifier (probably from Generator)
+    # generator: allows creatures to reproduce
+    # init_loc: initial location of the creature
+    # species: Species instance which details information about a creature's abilities
     def __init__ (self, elements, identifier, generator, init_loc, species):
         super().__init__(identifier, init_loc)
         self.__elements = elements  # set of all elements (needed to find/avoid food, shelter, and obstacles)
@@ -32,6 +38,7 @@ class Creature (Element):
             "food_use" : 0.10
         }
 
+    # getters
     def get_species (self): return self.__species
     def get_goal (self): return self.__goal.peek()
     def get_all_goals (self): return self.__goal
@@ -39,29 +46,40 @@ class Creature (Element):
     def get_restlessness (self): return self.__steps_waiting
     def get_food_amount (self): return len(self.__food)
 
+    # set attributes of creature (probably from a Species instance)
+    # attributes: dictionary of attributes
     def __set_attributes (self, attributes):
         self.__health_max = attributes["health"]
         self.__health = attributes["health"]
         self.__speed = attributes["speed"]
         self.__vulnerability = attributes["vulnerability"]
         self.__sight = attributes["sight"]
+        self.__resourcefulness = attributes["resourcefulness"]
 
+    # get health as a percent
     def health (self):
         return self.__health / self.__health_max
 
+    # add health to creature without going over maximum
+    # amount: number of health points to add
     def add_health (self, amount):
         self.__health = min(self.__health + amount, self.__health_max)
 
+    # remove health from creature without going below 0
+    # amount: number of health points to remove
     def sub_health (self, amount):
         self.__health = max(self.__health - amount, 0)
 
+    # determine if the creature is alive
     def is_alive (self):
         return self.__health > 0
 
+    # add the creature to the list of dead elements (removal happens via Board)
     def die (self):
         # put in DEAD set for removal by Board
         self.__elements[ElementType.DEAD].add(self)
 
+    # determine if a creature has at least a given amount of food
     def has_food (self, amount):
         return len(self.__food) >= amount
 
@@ -82,18 +100,23 @@ class Creature (Element):
         else:
             self.__steps_waiting = 0
 
+    # create another creature given specific conditions
+    # generate_creature: whether or not the current creature is responsible for adding the new creature
     def reproduce (self, generate_creature=False):
         if (generate_creature):
             self.__elements[ElementType.NEW].add(self.new_creature(self.__elements, self._location.copy(), self.__org_species))
         self.achieve_goal()
-        self.__food.pop()
-        self.__food.pop()
+        for i in range(0, self.__resourcefulness):
+            self.__food.pop()
 
+    # add a new goal to the stack
+    # goal: goal to be added
     def add_goal (self, goal):
         print_d(f"goal added: {goal}", "creature_goal_change")
         self.__goal.push(goal)
         self.__path_needed = True
 
+    # flag that the path must be recalculated
     def recalculate_goal (self):
         self.__path_needed = True
 
@@ -107,31 +130,34 @@ class Creature (Element):
     def pop_goal (self):
         self.__goal.pop()
 
+    # determine if the creature is wandering for food
     def is_wandering_for_food (self):
         return self.__goal.peek() == Goal.WANDER and self.__goal.peek_deep() == Goal.FOOD
 
+    # determine if the creature is wandering for shelter
     def is_wandering_for_shelter (self):
         return self.__goal.peek() == Goal.WANDER and self.__goal.peek_deep() == Goal.SHELTER
 
-    # wether or not to consume a piece of food
-    # food is required for reproduction but also staying alive
+    # wether or not to consume a piece of food (food is required for reproduction but also staying alive)
     def food_decision (self):
         # is health is very low and creature has food, consume food
         if (self.health() < self.__thresholds["food_use"] and len(self.__food) > 0):
             self.add_health(self.__food.pop().get_restoration())
 
+    # determine if the creatures current goal means the creature is walking
     def is_moving (self):
         if (self.__goal.peek() in [Goal.FOOD, Goal.SHELTER, Goal.WANDER, Goal.HEAL]):
             return True
         return False
 
+    # update the goal
     def adjust_goal (self):
         # if there is no goal, try to reproduce
         if (self.__goal.peek() is None):
             self.add_goal(Goal.REPRODUCE)
 
         # if goal is to reproduce, there is enough food, and the creature is not at a shelter, go to shelter
-        if (self.__goal.peek() == Goal.REPRODUCE and len(self.__food) >= 2 and self.get_element_type(self.__curr_element) != Goal.SHELTER):
+        if (self.__goal.peek() == Goal.REPRODUCE and self.has_food(self.__resourcefulness) and self.get_element_type(self.__curr_element) != Goal.SHELTER):
             self.add_goal(Goal.SHELTER)
 
         # if the goal is to reproduce but the creature has insufficient food and sufficient health, get food
@@ -159,6 +185,7 @@ class Creature (Element):
         if (self.__goal.peek() == Goal.SHELTER and self.get_element_type(self.__curr_element) == ElementType.SHELTER and self.__barred_shelter is None):
             self.achieve_goal()
 
+    # preform the necessary action (ex. grab food from the environment, reproduce)
     def perform_action (self):
         element_type = self.get_element_type(self.__curr_element)
 
@@ -171,7 +198,7 @@ class Creature (Element):
 
         # reproduce
         partner = self.reproduce_with()
-        if (self.__goal.peek() == Goal.REPRODUCE and element_type == ElementType.SHELTER and partner is not None and self.has_food(2)):
+        if (self.__goal.peek() == Goal.REPRODUCE and element_type == ElementType.SHELTER and partner is not None and self.has_food(self.__resourcefulness)):
             self.reproduce(generate_creature=True)
             self.achieve_goal()
             partner.reproduce(generate_creature=False)
@@ -202,6 +229,7 @@ class Creature (Element):
         return True  # the goal is not food
 
     # determine if there is a creature that is not self at the location
+    # loc: Location instance to check
     def creatures_at_location (self, loc):
         result = []
         for element in get_location_dictionary(self.__elements[ElementType.CREATURE])[loc]:
@@ -209,11 +237,11 @@ class Creature (Element):
                 result.append(element)
         return result
 
-    # get creature to reproduce with
+    # determine if there is a creature who can reproduce with the current creature at the current location (if yes, return it)
     def reproduce_with (self):
         creatures = self.creatures_at_location(self._location)
         for creature in creatures:
-            if (self.get_species() == creature.get_species() and creature.has_food(2) and creature.get_goal() == Goal.REPRODUCE):
+            if (self.get_species() == creature.get_species() and creature.has_food(self.__resourcefulness) and creature.get_goal() == Goal.REPRODUCE):
                 return creature
         return None
 
@@ -224,6 +252,8 @@ class Creature (Element):
                 return element
         return None
 
+    # get the type (ElementType) of an element
+    # element: element being tested
     def get_element_type (self, element):
         if (isinstance(element, Food)):
             return ElementType.FOOD
@@ -231,6 +261,7 @@ class Creature (Element):
             return ElementType.SHELTER
         return None
 
+    # get the path to the next objective
     def prepare_goal (self):
         print_d(f"{self.get_quick_label()} attempting to get path with goal={self.__goal.peek()}", "creature_path")
         path = None
@@ -260,9 +291,14 @@ class Creature (Element):
         if (nearest is None):
             self.__path = None
         else:
-            self.__path = Path(self._location, nearest.get_location(), self.__elements[ElementType.OBSTACLE], self.__sight)
+            path = Path(self._location, nearest.get_location(), self.__elements[ElementType.OBSTACLE], self.__sight)
+            if (path.path_exists()):
+                self.__path = path
+            else:
+                self.__path = None
 
     # verify that food exists at the given location
+    # loc: Location instance being checked
     def food_exists (self, loc):
         elements = elements_at(self.__elements[ElementType.FOOD], loc)
         if (elements is None):
@@ -271,6 +307,7 @@ class Creature (Element):
             return True
         return False
 
+    # move in the necessary manner (i.e., follow path or random walk)
     def move (self):
         print_d(f"{self.get_quick_label()} making movement", "creature_move")
         if (self.__path is not None):
@@ -289,6 +326,8 @@ class Creature (Element):
 
         self.__curr_element = self.current_location_element()
 
+    # determine if the given location can be traversed to by the creature
+    # loc: location being checked
     def valid_move_location (self, loc):
         elements = elements_at(self.__elements[ElementType.OBSTACLE], loc)
         if (elements is None):
@@ -298,7 +337,8 @@ class Creature (Element):
                 return False
         return True
 
-    # class_name: identifier of a class (ex. Food, Shelter)
+    # gets the nearest element to the creature
+    # elements: iterable of elements
     def __get_nearest (self, elements, barring=set()):
         print_d(f"finding nearest element to {self._location} from {elements}", "creature_nearest")
         min_distance = float("inf")
@@ -314,9 +354,11 @@ class Creature (Element):
                 closest = element
         return closest
 
+    # gets the nearest food to the creature
     def get_nearest_food (self):
         return self.__get_nearest(self.__elements[ElementType.FOOD])
 
+    # gets the nearest shelter to the creature
     def get_nearest_shelter (self, barring=set()):
         if (barring is None):
             barring = set()
@@ -324,6 +366,7 @@ class Creature (Element):
             barring = {self.__barred_shelter}
         return self.__get_nearest(self.__elements[ElementType.SHELTER], barring)
 
+    # perform all updates to the creature for a single time step
     def advance (self):
         self.restlessness()
         self.adjust_goal()
@@ -336,14 +379,16 @@ class Creature (Element):
         self.perform_action()
         if (self.get_element_type(self.__curr_element) != ElementType.SHELTER):
             self.sub_health(self.__vulnerability)
-        if (self.__health == 0):
+        if (not self.is_alive()):
             self.die()
         if (self.__path is not None):
             self.__path_needed = False
 
+    # get a string representing the creature's health
     def health_string (self):
         return f"{self.__health}/{self.__health_max} ({int(round(self.health() * 100, 0))}%)"
 
+    # get a string representing the creature's goals
     def goal_string (self):
         result = ""
         temp_goals = self.__goal.get_list()

@@ -1,4 +1,15 @@
 {
+    "files": {
+        "layout" : "initial_conditions/walled_shelters.csv"
+    },
+    "control" : {
+        "max_steps" : 1000,
+        "show_every_X_steps" : 50,
+        "wait_for_user" : false,
+        "delay" : 0,
+        "show_every_X_boards" : 0,
+        "show_graphs" : true
+    },
     "config" : {
         "csv_labels" : {
             "empty" : "-",
@@ -15,8 +26,7 @@
                     "min" : 10,
                     "max" : 25
                 },
-                "tries" : 5,
-                "chance" : 1
+                "chance" : 0.1
             },
             "shelter" : {
                 "restoration" : {
@@ -30,20 +40,28 @@
                     "max" : 5
                 }
             }
+        },
+        "limits" : {
+            "food" : {
+                "amount" : -1,
+                "tries" : 5
+            }
         }
     },
     "species" : {
         "1" : {
-            "health" : 150,
-            "speed" : 2,
-            "vulnerability" : 2,
-            "sight" : 15
+            "health" : 100,
+            "speed" : 3,
+            "vulnerability" : 4,
+            "sight" : 15,
+            "resourcefulness" : 2
         },
         "2" : {
             "health" : 150,
             "speed" : 2,
-            "vulnerability" : 4,
-            "sight" : 15
+            "vulnerability" : 3,
+            "sight" : 12,
+            "resourcefulness" : 2
         }
     }
 }
