@@ -30,7 +30,7 @@ class Creature (Element):
         self.__path_needed = False
         self.__curr_element = None
         self.__steps_waiting = 0
-        self.__barred_shelter = None
+        self.__barred_shelters = set()
         self.__thresholds = {
             "shelter_healing" : 0.70,
             "restlessness" : 30,
@@ -85,13 +85,13 @@ class Creature (Element):
 
     # count steps taken waiting for partner for reproduction
     def restlessness (self):
-        # if the creature finds another shelter or is desparate (need health), de-bar the original shelter
+        # if the creature is at a shelter or is desparate (need health), de-bar the shelters
         if (self.get_element_type(self.__curr_element) == ElementType.SHELTER or self.__goal.peek() == Goal.HEAL):
-            self.__barred_shelter = None
+            self.__barred_shelters.clear()
 
         if (self.get_element_type(self.__curr_element) == ElementType.SHELTER):
             if (self.__steps_waiting > self.__thresholds["restlessness"]):
-                self.__barred_shelter = self.__curr_element
+                self.__barred_shelters.add(self.__curr_element)
                 if (self.__goal.peek() != Goal.SHELTER):
                     self.add_goal(Goal.SHELTER)
             else:
@@ -161,8 +161,8 @@ class Creature (Element):
             self.add_goal(Goal.SHELTER)
 
         # if the goal is to reproduce but the creature has insufficient food and sufficient health, get food
-        if (self.__goal.peek() == Goal.REPRODUCE and len(self.__food) < 2 and self.health() > self.__thresholds["shelter_healing"]):
-            for i in range(0, 2 - len(self.__food)):
+        if (self.__goal.peek() == Goal.REPRODUCE and not self.has_food(self.__resourcefulness) and self.health() > self.__thresholds["shelter_healing"]):
+            for i in range(0, self.__resourcefulness - len(self.__food)):
                 self.add_goal(Goal.FOOD)
 
         # if health gets too low and creature is moving, replace all goals with heal
@@ -174,7 +174,7 @@ class Creature (Element):
 
         # goal is food or shelter but no food or shelter is in sight
         nearest_food = self.get_nearest_food()
-        nearest_shelter = self.get_nearest_shelter()
+        nearest_shelter = self.get_nearest_shelter(self.__barred_shelters)
         if ((self.__goal.peek() == Goal.FOOD and nearest_food is None) or (self.__goal.peek() == Goal.SHELTER and nearest_shelter is None)):
             self.add_goal(Goal.WANDER)
 
@@ -182,7 +182,7 @@ class Creature (Element):
         if ((self.__goal.peek() == Goal.WANDER or self.__goal.peek() == Goal.HEAL) and self.__path is not None):
             self.achieve_goal()
 
-        if (self.__goal.peek() == Goal.SHELTER and self.get_element_type(self.__curr_element) == ElementType.SHELTER and self.__barred_shelter is None):
+        if (self.__goal.peek() == Goal.SHELTER and self.get_element_type(self.__curr_element) == ElementType.SHELTER and len(self.__barred_shelters) == 0):
             self.achieve_goal()
 
     # preform the necessary action (ex. grab food from the environment, reproduce)
@@ -194,6 +194,7 @@ class Creature (Element):
             self.__elements[ElementType.FOOD].remove(self.__curr_element)
             self.__food.append(self.__curr_element)
             self.__curr_element = None
+            self.update_current_element()
             self.achieve_goal()
 
         # reproduce
@@ -286,7 +287,7 @@ class Creature (Element):
             nearest = self.get_nearest_food()
         elif (self.__goal.peek() == Goal.SHELTER or self.__goal.peek() == Goal.REPRODUCE or self.is_wandering_for_shelter()):
             print_d("getting path to nearest shelter", "creature_path")
-            nearest = self.get_nearest_shelter(self.__barred_shelter)
+            nearest = self.get_nearest_shelter(self.__barred_shelters)
         print_d(f"nearest element found: {nearest}", "creature_path")
         if (nearest is None):
             self.__path = None
@@ -324,6 +325,10 @@ class Creature (Element):
             if (self.valid_move_location(next_loc)):
                 self.set_location(next_loc)
 
+        self.update_current_element()
+
+    # updated the current element
+    def update_current_element (self):
         self.__curr_element = self.current_location_element()
 
     # determine if the given location can be traversed to by the creature
@@ -344,9 +349,8 @@ class Creature (Element):
         min_distance = float("inf")
         closest = None
         for element in elements:
-            if (len(barring) > 0):
-                if (element in barring):
-                    continue
+            if (element in barring):
+                continue
             distance = self._location.eucl_dist(element.get_location())
             print_d(f"distance to {element}: {distance} (sight={self.__sight})", "creature_nearest")
             if (distance < min_distance and distance <= self.__sight):
@@ -360,10 +364,6 @@ class Creature (Element):
 
     # gets the nearest shelter to the creature
     def get_nearest_shelter (self, barring=set()):
-        if (barring is None):
-            barring = set()
-        else:
-            barring = {self.__barred_shelter}
         return self.__get_nearest(self.__elements[ElementType.SHELTER], barring)
 
     # perform all updates to the creature for a single time step
@@ -405,4 +405,4 @@ class Creature (Element):
         return self._id == other.get_id() and self.__species == other.get_species()
 
     def __str__ (self):
-        return f"id={self._id}, health={self.__health}/{self.__health_max}, goal={self.__goal.peek()}, coords={self._location}"
+        return f"id={self._id}, species={self.__species}, health={self.__health}/{self.__health_max}, goal={self.__goal.peek()}, coords={self._location}"

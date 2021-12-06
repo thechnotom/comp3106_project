@@ -1,6 +1,6 @@
 {
     "files": {
-        "layout" : "initial_conditions/costly_shelters.csv"
+        "layout" : "initial_conditions/basic_start.csv"
     },
     "control" : {
         "max_steps" : 1000,
@@ -51,16 +51,16 @@
     "species" : {
         "1" : {
             "health" : 100,
-            "speed" : 3,
-            "vulnerability" : 4,
+            "speed" : 2,
+            "vulnerability" : 2,
             "sight" : 15,
             "resourcefulness" : 2
         },
         "2" : {
-            "health" : 150,
+            "health" : 100,
             "speed" : 2,
-            "vulnerability" : 3,
-            "sight" : 12,
+            "vulnerability" : 2,
+            "sight" : 15,
             "resourcefulness" : 2
         }
     }

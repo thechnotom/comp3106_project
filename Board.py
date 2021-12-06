@@ -32,7 +32,7 @@ class Board:
         self.__food_record = {}
         self.__species_update_steps = {}  # tracks the last step a species count was modified
         self.__limits = [top_left, bottom_right]  # Location instances specifying the corners of the area
-    
+
     # create the board from a CSV layout
     # layout_filename: name of the CSV file containing the layout
     # config_filename: name of the configuration JSON file
@@ -250,7 +250,7 @@ class Board:
         result = "--- Status ---\n"
         for creature in self.__elements[ElementType.CREATURE]:
             result += f"Creature ({creature.get_quick_label()}): {creature.health_string()}, Restlessness: {creature.get_restlessness()}, "
-            result += f"Food: {creature.get_food_amount()}, Goal: {creature.goal_string()}\n"
+            result += f"Food: {creature.get_food_amount()}, Location: {creature.get_location()}, Goal: {creature.goal_string()}\n"
         return result
 
     def population_record_string (self):

@@ -38,8 +38,8 @@ def list_addition (list_1, list_2):
 # Debug print
 def print_d (string, tag="default"):
     # which print_d calls should be displayed
-    # default, path, board_adv, creature_adv, creature_move, creature_path, creature_nearest, creature_goal_valid, board_generation, board_csv
-    allowed_tags = []
+    # default, path, board_adv, creature_adv, creature_move, creature_path, creature_nearest, creature_goal_valid, board_generation, board_csv, board_species_extinctions
+    allowed_tags = ["board_species_extinctions"]
     if (tag in allowed_tags):
         print(f"DEBUG: {string}")
 
