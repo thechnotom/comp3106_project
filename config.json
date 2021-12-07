@@ -5,7 +5,7 @@
     "control" : {
         "max_steps" : 1000,
         "show_every_X_steps" : 50,
-        "wait_for_user" : false,
+        "wait_for_user" : true,
         "delay" : 0,
         "show_every_X_boards" : 0,
         "show_graphs" : true

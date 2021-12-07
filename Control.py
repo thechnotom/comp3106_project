@@ -45,11 +45,12 @@ class Control:
 
         if (options["show_graphs"]):
             print("Creating graphs")
+            last_step = board.get_step()
             population_record = board.get_population_record()
             food_record = board.get_food_record()
             graph = Graph()
-            graph.create_species_graph(Graph.convert_population_record(population_record))
-            graph.create_food_graph(Graph.convert_food_record(food_record))
+            graph.create_species_graph(Graph.convert_population_record(population_record, last_step))
+            graph.create_food_graph(Graph.convert_food_record(food_record, last_step))
             try:
                 Graph.show_graphs()
             except KeyboardInterrupt:

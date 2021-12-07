@@ -8,7 +8,23 @@ class Graph:
         self.__count = 0
 
     @staticmethod
-    def convert_population_record (population_record):
+    def convert_population_record (population_record, num_steps):
+        result = {}
+        species_last_record = {}  # last recorded population for all species
+        # walk through all recorded time steps
+        for step in range(0, num_steps):
+            if (step in population_record):
+                for species in population_record[step]:
+                    species_last_record[species] = population_record[step][species]
+            for species in species_last_record:
+                if (species not in result):
+                    result[species] = {"step" : [], "population" : []}
+                result[species]["step"].append(step)
+                result[species]["population"].append(species_last_record[species])
+        return result
+
+    @staticmethod
+    def convert_population_record_depr (population_record):
         result = {}
         # walk through all recorded time steps
         for record in population_record:
@@ -20,8 +36,18 @@ class Graph:
                 result[species]["population"].append(population_record[record][species])
         return result
 
+    def convert_food_record (food_record, num_steps):
+        result = {"step" : [], "amount" : []}
+        food_last_record = 0
+        for step in range(0, num_steps):
+            if (step in food_record):
+                food_last_record = food_record[step]
+            result["step"].append(step)
+            result["amount"].append(food_last_record)
+        return result
+
     @staticmethod
-    def convert_food_record (food_record):
+    def convert_food_record_depr (food_record):
         result = {"step" : [], "amount" : []}
         for record in food_record:
             result["step"].append(record)
