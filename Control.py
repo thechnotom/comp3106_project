@@ -19,7 +19,7 @@ class Control:
         config_filename = "config.json"
         if (len(sys.argv) == 2):
             config_filename = sys.argv[1]
-        config = import_json("config.json")
+        config = import_json(config_filename)
         board = Board.from_csv(config["files"]["layout"], config_filename)
         options = config["control"]
         max_steps = options["max_steps"]
