@@ -10,7 +10,7 @@ Technical requirements:
   - Install with the following: pip3 install matplotlib
 
 The simulator can be run by using the following command (Windows PowerShell):
-py .\main.py <config>
+py .\main.py config_file.json
 
 Necessary configuration files:
 - config.json (or alternative provided on the command line)

@@ -53,6 +53,7 @@ class Path:
     def get_obstacle_dict (self, elements):
         return get_location_dictionary([x for x in elements if isinstance(x, Obstacle)])
 
+    # get the traversable neighbouring nodes of the given node
     def get_neighbour_nodes (self, node):
         nodes = []
         for modifier in get_movement_modifiers():
