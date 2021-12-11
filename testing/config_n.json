@@ -1,9 +1,9 @@
 {
     "files": {
-        "layout" : "initial_conditions/basic_start.csv"
+        "layout" : "initial_conditions/basic_start_3.csv"
     },
     "control" : {
-        "max_steps" : 1000,
+        "max_steps" : 10000,
         "show_every_X_steps" : 50,
         "wait_for_user" : true,
         "delay" : 0,
@@ -58,7 +58,14 @@
         },
         "2" : {
             "health" : 100,
-            "speed" : 3,
+            "speed" : 2,
+            "vulnerability" : 2,
+            "sight" : 15,
+            "resourcefulness" : 2
+        },
+        "3" : {
+            "health" : 100,
+            "speed" : 2,
             "vulnerability" : 2,
             "sight" : 15,
             "resourcefulness" : 2

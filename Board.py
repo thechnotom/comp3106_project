@@ -8,6 +8,7 @@ from Location import Location
 from Food import Food
 from Shelter import Shelter
 from Species import Species
+from Obstacle import Obstacle
 import random
 
 class Board:
@@ -57,8 +58,8 @@ class Board:
                     ))
                 elif (curr_label == board.__config["config"]["csv_labels"]["food"]):
                     board.generate_food(
-                        board.__config["config"]["limits"]["food"]["tries"],
-                        board.__config["config"]["random"]["food"]["chance"],
+                        1,
+                        1,
                         board.__config["config"]["random"]["food"]["restoration"]["min"],
                         board.__config["config"]["random"]["food"]["restoration"]["max"],
                         curr_loc
@@ -274,13 +275,18 @@ class Board:
             for col in range(base_coords[0], base_coords[0] + dim_limits[1]):
                 element = self.primary_element_at(all_elements, Location.from_xy(row, col))
                 if (element is None):
-                    result += "-"
+                    result += self.__config["config"]["csv_labels"]["empty"]
                 elif (isinstance(element, Creature)):
                     result += str(element.get_species())[0].upper()
                 elif (isinstance(element, Food)):
-                    result += "f"
+                    result += self.__config["config"]["csv_labels"]["food"]
                 elif (isinstance(element, Shelter)):
-                    result += "s"
+                    result += self.__config["config"]["csv_labels"]["shelter"]
+                elif (isinstance(element, Obstacle)):
+                    if (element.is_passable()):
+                        result += self.__config["config"]["csv_labels"]["obstacle"]["passable"]
+                    else:
+                        result += self.__config["config"]["csv_labels"]["obstacle"]["impassable"]
                 else:
                     result += "?"
                 result += " "

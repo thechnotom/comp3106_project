@@ -1,6 +1,6 @@
 {
     "files": {
-        "layout" : "initial_conditions/basic_start.csv"
+        "layout" : "initial_conditions/species_2_shelter_1.csv"
     },
     "control" : {
         "max_steps" : 1000,
@@ -23,20 +23,20 @@
         "random" : {
             "food" : {
                 "restoration" : {
-                    "min" : 10,
-                    "max" : 25
+                    "min" : 15,
+                    "max" : 15
                 },
-                "chance" : 0.1
+                "chance" : 1
             },
             "shelter" : {
                 "restoration" : {
-                    "min" : 1,
-                    "max" : 3
+                    "min" : 2,
+                    "max" : 2
                 }
             },
             "obstacle" : {
                 "cost" : {
-                    "min" : 2,
+                    "min" : 5,
                     "max" : 5
                 }
             }
@@ -44,24 +44,24 @@
         "limits" : {
             "food" : {
                 "amount" : -1,
-                "tries" : 5
+                "tries" : 2
             }
         }
     },
     "species" : {
         "1" : {
             "health" : 100,
-            "speed" : 2,
+            "speed" : 1,
             "vulnerability" : 2,
             "sight" : 15,
-            "resourcefulness" : 2
+            "resourcefulness" : 1
         },
         "2" : {
             "health" : 100,
-            "speed" : 3,
+            "speed" : 1,
             "vulnerability" : 2,
             "sight" : 15,
-            "resourcefulness" : 2
+            "resourcefulness" : 1
         }
     }
 }

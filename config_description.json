@@ -1,0 +1,60 @@
+{
+    "files": {
+        "layout" : "initial conditions (CSV file)"
+    },
+    "control" : {
+        "max_steps" : "number of steps the simulator should execute",
+        "show_every_X_steps" : "how frequently to display the step number",
+        "wait_for_user" : "whether the user is required to hit ENTER to proceed",
+        "delay" : "how long of a delay there should be between each set of calculations (used for demonstrative purposes)",
+        "show_every_X_boards" : "how frequently to display the environment and the status of each creature",
+        "show_graphs" : "whether or not to generate graphs at the end of the simulation"
+    },
+    "config" : {
+        "csv_labels" : {
+            "empty" : "character used to represent an empty space",
+            "shelter" : "character used to represent a shelter",
+            "food" : "character used to represent food",
+            "obstacle" : {
+                "passable" : "character used to represent a passable obstacle",
+                "impassable" : "character used to represent an impassable obstacle"
+            }
+        },
+        "random" : {
+            "food" : {
+                "restoration" : {
+                    "min" : "minimum amount of health a food item can restore",
+                    "max" : "maximum amount of health a food item can restore"
+                },
+                "chance" : "how likely a food item is to generate on each attempt"
+            },
+            "shelter" : {
+                "restoration" : {
+                    "min" : "minumum amount of health a shelter can regenerate each step",
+                    "max" : "maximum amount of health a shelter can regenerate each step"
+                }
+            },
+            "obstacle" : {
+                "cost" : {
+                    "min" : "minimum cost of traversing a passable obstacle",
+                    "max" : "maximum cost of traversing a passable obstacle"
+                }
+            }
+        },
+        "limits" : {
+            "food" : {
+                "amount" : "maximum amount of food that can be on the board at once (-1 for unlimited)",
+                "tries" : "maximum number of times the simulator will try to generate food in every step"
+            }
+        }
+    },
+    "species" : {
+        "1" : {
+            "health" : "the maximum amount of health a creature has",
+            "speed" : "the number of times a creature can move in a step",
+            "vulnerability" : "the amount of health lost every step a creature is not in a shelter",
+            "sight" : "the maximum Euclidean distance a creature can path find to",
+            "resourcefulness" : "the number of food items required for reproduction"
+        }
+    }
+}
